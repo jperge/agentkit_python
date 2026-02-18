@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ToolInfo, WalletInfo } from "../types";
 
-const API = "http://localhost:8000";
+const API = `${window.location.protocol}//${window.location.hostname}:8000`;
 
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletInfo | null>(null);

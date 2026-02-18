@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatMessage, WsEvent } from "../types";
 
-const WS_URL = "ws://localhost:8000/ws/chat";
+const WS_URL = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.hostname}:8000/ws/chat`;
 const STORAGE_KEY = "cdp-chat-messages";
 
 let msgId = Date.now();

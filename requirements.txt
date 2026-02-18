@@ -1,0 +1,11 @@
+# Vendored packages (install first)
+-e ./packages/coinbase-agentkit
+-e ./packages/coinbase-agentkit-openai-agents-sdk
+
+# Core dependencies
+python-dotenv>=1.0.1,<2
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+websockets>=13.0
+openai-agents>=0.0.6,<0.0.7
+pydantic>=2.0
