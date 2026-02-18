@@ -78,7 +78,9 @@ def setup() -> Agent:
     global _agent, _wallet_provider, _agentkit
 
     network_id = os.getenv("NETWORK_ID", "base-sepolia")
-    wallet_file = f"wallet_data_{network_id.replace('-', '_')}.txt"
+    # Use absolute path relative to this file so it works regardless of cwd
+    _dir = os.path.dirname(os.path.abspath(__file__))
+    wallet_file = os.path.join(_dir, f"wallet_data_{network_id.replace('-', '_')}.txt")
 
     wallet_data = {}
     if os.path.exists(wallet_file):

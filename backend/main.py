@@ -5,7 +5,6 @@ import os
 
 os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
 
-import asyncio
 import json
 import traceback
 from contextlib import asynccontextmanager
@@ -41,7 +40,8 @@ app = FastAPI(title="CDP AgentKit Chat API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    allow_origin_regex=r"http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,10 +92,10 @@ async def chat(request: dict):
                     "arguments": getattr(raw, "arguments", ""),
                 })
             elif isinstance(item, ToolCallOutputItem):
-                raw = item.raw_item
+                output = getattr(item, "output", None) or getattr(item.raw_item, "output", "")
                 tool_calls.append({
                     "type": "tool_output",
-                    "output": getattr(raw, "output", ""),
+                    "output": str(output) if output else "",
                 })
 
         return ChatResponse(
@@ -174,12 +174,15 @@ async def chat_websocket(websocket: WebSocket):
                         })
 
                     elif event.name == "tool_output":
-                        raw = event.item.raw_item
-                        output = getattr(raw, "output", "")
+                        # Use item.output (the actual output) over raw_item.output
+                        output = getattr(event.item, "output", None)
+                        if output is None:
+                            output = getattr(event.item.raw_item, "output", "")
+                        output_str = str(output) if output else ""
                         await websocket.send_json({
                             "type": "tool_output",
                             "name": current_tool_name or "unknown",
-                            "output": output if len(str(output)) < 5000 else str(output)[:5000] + "...",
+                            "output": output_str[:5000] if len(output_str) > 5000 else output_str,
                         })
                         current_tool_name = None
 
@@ -195,14 +198,6 @@ async def chat_websocket(websocket: WebSocket):
                                 "type": "message",
                                 "content": text,
                             })
-
-                # Send final output (may differ from streamed message if agent did handoffs)
-                final = result.final_output
-                if final:
-                    await websocket.send_json({
-                        "type": "message",
-                        "content": final,
-                    })
 
                 await websocket.send_json({"type": "done"})
 
